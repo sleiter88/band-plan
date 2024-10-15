@@ -4,19 +4,24 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from '
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar, Check, X, User, UserCheck } from 'lucide-react';
 
+// Define el tipo para los miembros
+type BandMember = {
+  id: string;
+  instruments: string[];
+};
+
 const AvailabilityCalendar = ({ db, selectedBand }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [availability, setAvailability] = useState({});
-  const [bandAvailability, setBandAvailability] = useState({});
-  const [memberNames, setMemberNames] = useState({});
+  const [bandAvailability, setBandAvailability] = useState<Record<string, { isAvailable: boolean; availableMembers: any[]; availableSubstitutes: any[] }>>({});
+  const [memberNames, setMemberNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!selectedBand) return;
 
     const fetchAndCalculateAvailability = async () => {
-      const membersAvailability = {};
-      const bandAvail = {};
-      const names = {};
+      const membersAvailability: Record<string, string[]> = {};
+      const names: Record<string, string | null> = {};
 
       // Fetch regular members' and substitutes' availability
       const fetchMemberAvailability = async (member) => {
@@ -53,31 +58,33 @@ const AvailabilityCalendar = ({ db, selectedBand }) => {
         );
 
         const unavailableInstruments = selectedBand.members
-          .filter(member => !membersAvailability[member.id].includes(date))
-          .map(member => member.instruments)
+          .filter((member: BandMember) => 
+            !membersAvailability[member.id].includes(date)
+          )
+          .map((member: BandMember) => member.instruments)
           .flat();
 
         const availableSubstitutes = (selectedBand.substitutes || [])
-          .filter(sub => membersAvailability[sub.id].includes(date));
+          .filter((sub: BandMember) => membersAvailability[sub.id].includes(date));
 
-        const allInstrumentsCovered = unavailableInstruments.every(instrument => 
-          availableSubstitutes.some(sub => sub.instruments.includes(instrument))
+        const allInstrumentsCovered = unavailableInstruments.every((instrument: string) => 
+          availableSubstitutes.some((sub: BandMember) => sub.instruments.includes(instrument))
         );
 
-        bandAvail[date] = {
+        bandAvailability[date] = {
           isAvailable: availableMembers.length === selectedBand.members.length || allInstrumentsCovered,
           availableMembers: availableMembers,
           availableSubstitutes: availableSubstitutes,
         };
       });
 
-      setBandAvailability(bandAvail);
+      setBandAvailability(bandAvailability);
     };
 
     fetchAndCalculateAvailability();
 
     // Set up real-time listener for changes in member availability
-    const unsubscribes = [];
+    const unsubscribes: (() => void)[] = [];
     [...selectedBand.members, ...(selectedBand.substitutes || [])].forEach(member => {
       const memberRef = collection(db, 'members', member.id, 'availability');
       const unsubscribe = onSnapshot(memberRef, () => {
@@ -98,13 +105,13 @@ const AvailabilityCalendar = ({ db, selectedBand }) => {
   const nextMonth = () => setCurrentMonth(month => new Date(month.getFullYear(), month.getMonth() + 1, 1));
   const prevMonth = () => setCurrentMonth(month => new Date(month.getFullYear(), month.getMonth() - 1, 1));
 
-  const renderMemberAvailability = (date) => {
+  const renderMemberAvailability = (date: Date) => {
     const dateKey = format(date, 'yyyy-MM-dd');
     const dateAvailability = bandAvailability[dateKey];
 
     if (!dateAvailability) return null;
 
-    const renderMember = (member, isSubstitute = false) => {
+    const renderMember = (member: { id: string }, isSubstitute = false) => {
       const memberName = memberNames[member.id] || 'Unknown';
       const initial = memberName.charAt(0).toUpperCase() + memberName.slice(1, 2).toLowerCase();
 
