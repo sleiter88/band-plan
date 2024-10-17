@@ -3,6 +3,7 @@ import { collection, getDocs, doc, getDoc, updateDoc, arrayRemove } from 'fireba
 import { UserCircle, Edit, Trash, UserPlus, AlertTriangle } from 'lucide-react';
 import AddMemberModal from './AddMemberModal';
 import EditMemberModal from './EditMemberModal';
+import { getDocs, getDoc } from '../utils/firebaseUtils';
 
 interface Instrument {
   id: string;

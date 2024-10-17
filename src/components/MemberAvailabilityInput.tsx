@@ -6,6 +6,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-reac
 import Select from 'react-select';
 import { format, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getDocs, getDoc } from '../utils/firebaseUtils';
 
 const MemberAvailabilityInput = ({ db, selectedBand, selectedMember, setSelectedMember }) => {
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);

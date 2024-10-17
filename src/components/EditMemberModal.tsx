@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc, arrayRemove, arrayUnion, collection, getDocs } from 'firebase/firestore';
 import { X, Save } from 'lucide-react';
 import Select from 'react-select';
+import { getDocs, getDoc } from '../utils/firebaseUtils';
 
 interface Instrument {
   id: string;

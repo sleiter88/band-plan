@@ -5,10 +5,28 @@ import { es } from 'date-fns/locale';
 import { Calendar, Clock, Trash, Plus, FileText, Users, Music } from 'lucide-react';
 import Select from 'react-select';
 import 'react-datepicker/dist/react-datepicker.css';
+import { getDocs, getDoc } from '../utils/firebaseUtils';
+
+// Define el tipo para los elementos de availableDates
+type AvailableDate = {
+  value: string;
+  label: string;
+  availableMembers: string[];
+};
+
+// Define el tipo para los eventos
+type Event = {
+  id: string;
+  date: string;
+  title: string;
+  time?: string;
+  notes?: string;
+  members: string[];
+};
 
 const BandEvents = ({ db, selectedBand }) => {
-  const [events, setEvents] = useState([]);
-  const [availableDates, setAvailableDates] = useState([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [availableDates, setAvailableDates] = useState<AvailableDate[]>([]);
   const [newEvent, setNewEvent] = useState({ date: '', title: '', time: '', notes: '', members: [] });
   const [memberDetails, setMemberDetails] = useState({});
 
@@ -86,7 +104,7 @@ const BandEvents = ({ db, selectedBand }) => {
     };
 
     fetchEventsAndAvailableDates();
-  }, [db, selectedBand]);
+  }, [db, selectedBand, events]); // Añade 'events' como dependencia
 
   const handleDeleteEvent = async (eventId) => {
     if (selectedBand) {
@@ -94,8 +112,8 @@ const BandEvents = ({ db, selectedBand }) => {
       await deleteDoc(eventRef);
       setEvents(events.filter(event => event.id !== eventId));
       
-      // Add the deleted event's date back to available dates
-      const deletedEvent = events.find(event => event.id === eventId);
+      // Asegúrate de que deletedEvent sea del tipo Event
+      const deletedEvent: Event | undefined = events.find(event => event.id === eventId);
       if (deletedEvent) {
         const parsedDate = parseISO(deletedEvent.date);
         setAvailableDates(prevDates => [
@@ -110,7 +128,7 @@ const BandEvents = ({ db, selectedBand }) => {
     }
   };
 
-  const generateEventId = (date, title) => {
+  const generateEventId = (date: string, title: string): string => {
     const formattedDate = format(parseISO(date), 'yyyy-MM-dd');
     const formattedTitle = title.replace(/\s+/g, '');
     return `${formattedDate}_${formattedTitle}`;
@@ -161,7 +179,7 @@ const BandEvents = ({ db, selectedBand }) => {
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Plus className="mr-2" size={20} />
-          Agregar Nuevo Evento
+          Agregar Nuevo Evento MADAFAKA
         </h2>
         <form onSubmit={handleAddEvent}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

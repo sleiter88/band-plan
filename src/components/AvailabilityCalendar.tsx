@@ -3,6 +3,7 @@ import { collection, getDocs, query, where, onSnapshot } from 'firebase/firestor
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar, Check, X, User, UserCheck } from 'lucide-react';
+import { getDocs, getDoc } from '../utils/firebaseUtils';
 
 // Define el tipo para los miembros
 type BandMember = {
