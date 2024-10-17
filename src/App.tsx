@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import BandSelector from './components/BandSelector';
 import BandMembersList from './components/BandMembersList';
 import MemberAvailabilityInput from './components/MemberAvailabilityInput';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
 import BandEvents from './components/BandEvents';
+import AuthComponent from './components/AuthComponent';
 import { Music } from 'lucide-react';
 
 const firebaseConfig = {
@@ -20,31 +22,25 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 function App() {
   const [selectedBand, setSelectedBand] = useState(null);
   const [bands, setBands] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
-
-  const fetchBands = async () => {
-    const bandsCollection = collection(db, 'bands');
-    const bandsSnapshot = await getDocs(bandsCollection);
-    const bandsData = bandsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setBands(bandsData);
-  };
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    fetchBands();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleBandUpdate = async () => {
-    if (selectedBand) {
-      const bandDoc = await getDoc(doc(db, 'bands', selectedBand.id));
-      const updatedBandData = { id: bandDoc.id, ...bandDoc.data() };
-      setSelectedBand(updatedBandData);
-      await fetchBands();
-    }
-  };
+  if (!user) {
+    return <AuthComponent />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
@@ -62,7 +58,7 @@ function App() {
               <BandMembersList 
                 db={db} 
                 selectedBand={selectedBand} 
-                onBandUpdate={handleBandUpdate}
+                onBandUpdate={() => {}}
                 selectedMember={selectedMember}
                 setSelectedMember={setSelectedMember}
               />
